@@ -4,3 +4,4 @@ node_modules/
 *credentials.env
 .git/
 postman_collection.json
+JOURNAL_DE_BORD.md

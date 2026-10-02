@@ -3,3 +3,6 @@ node_modules/
 .env.*
 !.env.example
 *credentials.env
+
+# Documentation personnelle
+JOURNAL_DE_BORD.md
