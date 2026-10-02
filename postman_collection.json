@@ -1,0 +1,129 @@
+{
+  "info": {
+    "name": "Location Voitures API - Cars",
+    "description": "Collection Postman pour tester les routes de gestion des véhicules",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "health"]
+        }
+      }
+    },
+    {
+      "name": "2. Ajouter une voiture (Succès - 201)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"marque\": \"Peugeot\",\n  \"modele\": \"208\",\n  \"type_vehicule\": \"voiture\",\n  \"immatriculation\": \"EF456GH\",\n  \"type_carburant\": \"essence\",\n  \"date_mise_en_service\": \"2023-06-15\",\n  \"kilometrage\": 24000,\n  \"consommation\": 5.2\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/cars",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "cars"]
+        }
+      }
+    },
+    {
+      "name": "3. Ajouter un van électrique (Succès - 201)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"marque\": \"Volkswagen\",\n  \"modele\": \"ID. Buzz\",\n  \"type_vehicule\": \"van\",\n  \"immatriculation\": \"KL789MN\",\n  \"type_carburant\": \"électrique\",\n  \"date_mise_en_service\": \"2023-11-20\",\n  \"kilometrage\": 8500,\n  \"consommation\": 21.4\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/cars",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "cars"]
+        }
+      }
+    },
+    {
+      "name": "4. Tester Doublon Immatriculation (Conflit - 409)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"marque\": \"Peugeot\",\n  \"modele\": \"208\",\n  \"type_vehicule\": \"voiture\",\n  \"immatriculation\": \"EF456GH\",\n  \"type_carburant\": \"essence\",\n  \"date_mise_en_service\": \"2023-06-15\",\n  \"kilometrage\": 24000,\n  \"consommation\": 5.2\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/cars",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "cars"]
+        }
+      }
+    },
+    {
+      "name": "5. Validation Erreurs (Bad Request - 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"marque\": \"Renault\",\n  \"modele\": \"Clio\",\n  \"type_vehicule\": \"camion\",\n  \"immatriculation\": \"FAUSSE_PLAQUE\",\n  \"type_carburant\": \"gpl\",\n  \"date_mise_en_service\": \"2035-01-01\",\n  \"kilometrage\": -100,\n  \"consommation\": -5\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/cars",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "cars"]
+        }
+      }
+    },
+    {
+      "name": "6. Obtenir la liste des voitures (Succès - 200)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/cars",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "v1", "cars"]
+        }
+      }
+    }
+  ]
+}
