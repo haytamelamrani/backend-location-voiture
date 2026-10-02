@@ -24,7 +24,6 @@ Fournit une API REST pour la gestion de la flotte de véhicules, des réservatio
 ```
 backend-location-voiture/
 ├── .env                    # Variables d'environnement (non versionné)
-├── .env.example            # Template des variables d'environnement
 ├── .gitignore
 ├── .dockerignore
 ├── Dockerfile              # Image Docker de l'API
@@ -104,7 +103,7 @@ docker-compose down
 
 ### Prérequis
 - Node.js installé
-- MongoDB en cours d'exécution
+- MongoDB en cours d'exécution ou un cluster MongoDB Atlas accessible
 
 ### Installation
 
@@ -114,11 +113,54 @@ npm install
 
 ### Configuration
 
-Copier le fichier `.env.example` en `.env` et adapter les valeurs :
+Créer un fichier `.env` à la racine du backend s'il n'existe pas déjà,
+puis adapter les valeurs (conserver la configuration existante sinon) :
 
-```bash
-cp .env.example .env
+```dotenv
+PORT=5000
+NODE_ENV=development
+DATABASE_URL="mongodb+srv://<utilisateur>:<mot-de-passe>@<cluster>/location-voitures?retryWrites=true&w=majority"
+JWT_SECRET=<secret-aleatoire>
+JWT_EXPIRES_IN=7d
 ```
+
+Pour MongoDB Atlas, renseigner `DATABASE_URL` dans `.env` avec l'URI du
+cluster, en précisant la base `/location-voitures` avant les paramètres `?`.
+Si le fichier fourni par Atlas utilise `MONGODB_URI`, copier sa valeur dans
+`DATABASE_URL`. Le fichier `.env` contient des identifiants et reste exclu de Git.
+
+Dans Atlas, autoriser l'adresse IP de la machine dans **Network Access** et
+vérifier que l'utilisateur de base de données dispose des droits nécessaires
+sur `location-voitures` dans **Database Access**.
+
+Le serveur attend la connexion à MongoDB avant d'écouter sur le port 5000.
+En cas d'échec, il s'arrête avec un message sans identifiants. Docker Compose
+utilise sa propre base MongoDB locale définie dans `docker-compose.yml`.
+
+### Vérifier la connexion MongoDB
+
+Depuis le dossier `backend-location-voiture`, lancer :
+
+```powershell
+npm.cmd run db:check
+```
+
+Cette commande charge le `.env` du backend et exécute un `ping`, sans modifier
+les données. Elle affiche la base connectée en cas de succès, ou un diagnostic
+sans identifiants en cas d'échec, puis se ferme. Le délai total est limité à 25 secondes.
+Sous PowerShell, `npm.cmd` permet d'utiliser npm même si les scripts `.ps1`
+sont désactivés ; sur les autres systèmes, utiliser `npm run db:check`.
+
+En cas d'échec réseau ou TLS, vérifier d'abord que l'IP actuelle est autorisée
+dans Atlas : **Network Access > Add IP Address > Add Current IP Address**,
+puis relancer le diagnostic. Vérifier également le VPN ou le pare-feu si besoin.
+Voir la [documentation de connexion Atlas](https://www.mongodb.com/docs/atlas/connect-to-database-deployment/).
+
+Le chemin des données est : **frontend → API du backend → MongoDB**.
+L'URI MongoDB reste uniquement dans le backend. Dans cette version du projet,
+les modèles et routes métier sont encore à implémenter, et le frontend contient
+l'écran initial de Vite : une connexion réussie ne suffit donc pas encore à
+afficher des voitures ou enregistrer des réservations.
 
 ### Démarrage
 
