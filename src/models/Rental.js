@@ -2,6 +2,14 @@
 const mongoose = require('mongoose');
 
 const reservationVIPSchema = new mongoose.Schema({
+    nom_client: {
+        type: String,
+        required: true
+    },
+    prenom_client: {
+        type: String,
+        required: true
+    },
     vehicule_reserve: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Vehicule',
