@@ -1,1 +1,0 @@
-// Modèle User (Mongoose)

@@ -12,7 +12,6 @@ Fournit une API REST pour la gestion de la flotte de véhicules, des réservatio
 | Runtime         | Node.js              |
 | Framework       | Express.js           |
 | Base de données | MongoDB + Mongoose   |
-| Auth            | JWT + bcryptjs       |
 | Sécurité        | helmet, cors         |
 | Config          | dotenv               |
 | Dev             | nodemon              |
