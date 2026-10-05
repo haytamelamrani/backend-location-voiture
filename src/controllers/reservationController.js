@@ -31,9 +31,9 @@ const checkAvailability = async (req, res) => {
     }).select('vehicule');
 
     // Trouver les réservations VIP
-    // Pour simplifier, on récupère toutes les VIP et on vérifie en mémoire ou on fait une approximation (si la date de début + durée chevauche)
-    const allVIPs = await ReservationVIP.find({}).select('vehicule date_debut_reservation duree_reservation');
+    const allVIPs = await ReservationVIP.find({}).select('vehicule_reserve date_debut_reservation duree_reservation');
     const overlappingVIPs = allVIPs.filter(vip => {
+      if (!vip.vehicule_reserve || !vip.date_debut_reservation) return false;
       const vipStart = new Date(vip.date_debut_reservation);
       const vipEnd = new Date(vipStart);
       vipEnd.setDate(vipEnd.getDate() + vip.duree_reservation);
@@ -41,8 +41,8 @@ const checkAvailability = async (req, res) => {
     });
 
     const reservedCarIds = [
-      ...overlappingReservations.map(res => res.vehicule.toString()),
-      ...overlappingVIPs.map(res => res.vehicule.toString())
+      ...overlappingReservations.filter(res => res.vehicule).map(res => res.vehicule.toString()),
+      ...overlappingVIPs.filter(res => res.vehicule_reserve).map(res => res.vehicule_reserve.toString())
     ];
 
     // Trouver les véhicules qui ne sont pas dans la liste des véhicules réservés
@@ -109,8 +109,9 @@ const createReservation = async (req, res) => {
     }
 
     // Vérifier aussi les VIP
-    const allVIPs = await ReservationVIP.find({ vehicule }).select('date_debut_reservation duree_reservation');
+    const allVIPs = await ReservationVIP.find({ vehicule_reserve: vehicule }).select('date_debut_reservation duree_reservation');
     const isOverlappingVIP = allVIPs.some(vip => {
+      if (!vip.date_debut_reservation) return false;
       const vipStart = new Date(vip.date_debut_reservation);
       const vipEnd = new Date(vipStart);
       vipEnd.setDate(vipEnd.getDate() + vip.duree_reservation);
