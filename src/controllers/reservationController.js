@@ -138,7 +138,35 @@ const createReservation = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Récupérer la liste des réservations
+ * @route   GET /api/v1/reservations
+ * @access  Public / Admin
+ */
+const getReservations = async (req, res) => {
+  try {
+    const reservations = await Reservation
+      .find()
+      .populate('vehicule')
+      .populate('pre_reservation_id')
+      .sort({ date_creation: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: reservations.length,
+      data: reservations
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Erreur lors de la récupération des réservations.",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   checkAvailability,
-  createReservation
+  createReservation,
+  getReservations
 };
