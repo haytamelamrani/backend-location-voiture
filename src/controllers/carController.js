@@ -56,11 +56,19 @@ exports.createCar = async (req, res, next) => {
  */
 exports.getCars = async (req, res, next) => {
   try {
-    const vehicles = await Vehicule.find().sort({ date_insertion: -1 });
+    const marqueFilter = req.query.marque ? String(req.query.marque).trim() : '';
+    const query = {};
+
+    if (marqueFilter) {
+      query.marque = { $regex: marqueFilter, $options: 'i' };
+    }
+
+    const vehicles = await Vehicule.find(query).sort({ date_insertion: -1 });
 
     return res.status(200).json({
       success: true,
       count: vehicles.length,
+      filter: marqueFilter || 'all',
       data: vehicles
     });
   } catch (error) {
