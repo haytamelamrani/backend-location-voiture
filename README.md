@@ -70,31 +70,62 @@ Ce projet suit la méthodologie **Scrum**. Le développement est découpé en **
 
 ---
 
-## 🐳 Docker
+## 🐳 Docker & CI/CD (GHCR)
 
-### Construire l'image Docker (à chaque fin de sprint)
+### Variables d'environnement au runtime
+
+| Variable | Description | Défaut / Exemple |
+|---|---|---|
+| `PORT` | Port d'écoute du serveur Node.js | `5000` |
+| `NODE_ENV` | Environnement d'exécution | `production` ou `development` |
+| `CLIENT_URL` | URL(s) autorisée(s) par CORS | `http://localhost:5173` |
+| `DATABASE_URL` | Chaîne de connexion MongoDB (locale ou Atlas) | `mongodb://mongo:27017/location-voitures` |
+| `JWT_SECRET` | Clé secrète pour les tokens JWT | `votre_cle_secrete_jwt` |
+| `JWT_EXPIRES_IN` | Durée de validité des tokens | `7d` |
+
+### Construire l'image Docker en local
 
 ```bash
-# Construire et taguer l'image avec le numéro du sprint
-docker build -t location-voitures-api:sprint-1 .
+docker build -t ghcr.io/haytamelamrani/backend-location-voiture:latest .
 ```
 
-### Lancer avec Docker Compose (API + MongoDB)
+### Récupérer l'image depuis GitHub Container Registry (GHCR)
 
 ```bash
-docker-compose up -d
+docker pull ghcr.io/haytamelamrani/backend-location-voiture:latest
 ```
 
-### Vérifier les conteneurs
+### Exécuter le conteneur en local (avec mappage de port)
 
 ```bash
-docker ps
+# Exemple avec fichier .env :
+docker run -d --name backend-api -p 5000:5000 --env-file .env ghcr.io/haytamelamrani/backend-location-voiture:latest
+
+# Ou en passant directement les variables nécessaires :
+docker run -d --name backend-api -p 5000:5000 \
+  -e PORT=5000 \
+  -e NODE_ENV=production \
+  -e CLIENT_URL=http://localhost:5173 \
+  -e DATABASE_URL="mongodb+srv://<user>:<password>@<cluster>.mongodb.net/location-voitures" \
+  -e JWT_SECRET=your_jwt_secret_key_here \
+  -e JWT_EXPIRES_IN=7d \
+  ghcr.io/haytamelamrani/backend-location-voiture:latest
 ```
 
-### Arrêter les conteneurs
+### Lancer l'environnement complet avec Docker Compose (API + MongoDB)
 
 ```bash
-docker-compose down
+# Démarrage
+docker compose up -d
+
+# Vérifier les conteneurs
+docker compose ps
+
+# Consulter les logs de l'API
+docker compose logs -f api
+
+# Arrêter les conteneurs
+docker compose down
 ```
 
 ---

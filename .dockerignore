@@ -3,5 +3,6 @@ node_modules/
 .env.*
 *credentials.env
 .git/
+.github/
 postman_collection.json
 JOURNAL_DE_BORD.md
