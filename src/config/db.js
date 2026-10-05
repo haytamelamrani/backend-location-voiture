@@ -1,14 +1,15 @@
-// Configuration de la connexion à la base de données
 const mongoose = require('mongoose');
 
-const connectDB = async () => {
-    try {
-        const conn = await mongoose.connect(process.env.DATABASE_URL);
-        console.log(`MongoDB connecté : ${conn.connection.host}`);
-    } catch (error) {
-        console.error(`Erreur de connexion MongoDB : ${error.message}`);
-        process.exit(1);
-    }
-};
+async function connectDB() {
+  const uri = process.env.DATABASE_URL;
+
+  if (!uri) {
+    throw new Error('DATABASE_URL doit être définie dans le fichier .env.');
+  }
+
+  return mongoose.connect(uri, {
+    serverSelectionTimeoutMS: 10000,
+  });
+}
 
 module.exports = connectDB;
