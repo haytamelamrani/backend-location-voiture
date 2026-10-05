@@ -44,6 +44,8 @@ const seed = async () => {
 
         // ---- 4. Création d'une réservation VIP liée au véhicule ----
         const reservation = await ReservationVIP.create({
+            nom_client: 'Dupont',
+            prenom_client: 'Jean',
             vehicule_reserve: vehicule._id,
             duree_reservation: 7,
             date_debut_reservation: new Date('2026-11-01')
