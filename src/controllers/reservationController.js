@@ -22,16 +22,17 @@ const checkAvailability = async (req, res) => {
       return res.status(400).json({ message: "La date de fin doit être strictement postérieure à la date de début." });
     }
 
-    // Trouver les réservations régulières qui chevauchent la période demandée
+    // Trouver les réservations régulières confirmées qui chevauchent la période demandée
     const overlappingReservations = await Reservation.find({
+      statut: { $ne: 'Annulée' },
       $and: [
         { date_debut: { $lte: endDate } },
         { date_fin: { $gte: startDate } }
       ]
     }).select('vehicule');
 
-    // Trouver les réservations VIP
-    const allVIPs = await ReservationVIP.find({}).select('vehicule_reserve date_debut_reservation duree_reservation');
+    // Trouver les réservations VIP non annulées
+    const allVIPs = await ReservationVIP.find({ statut: { $ne: 'Annulée' } }).select('vehicule_reserve date_debut_reservation duree_reservation statut');
     const overlappingVIPs = allVIPs.filter(vip => {
       if (!vip.vehicule_reserve || !vip.date_debut_reservation) return false;
       const vipStart = new Date(vip.date_debut_reservation);
@@ -85,6 +86,7 @@ const createReservation = async (req, res) => {
     // Vérifier si le client a déjà réservé un véhicule pour cette période
     const clientHasReservation = await Reservation.exists({
       'client.email': email,
+      statut: { $ne: 'Annulée' },
       $and: [
         { date_debut: { $lte: endDate } },
         { date_fin: { $gte: startDate } }
@@ -98,6 +100,7 @@ const createReservation = async (req, res) => {
     // Vérifier une dernière fois la disponibilité pour éviter le double-booking
     const isOverlapping = await Reservation.exists({
       vehicule,
+      statut: { $ne: 'Annulée' },
       $and: [
         { date_debut: { $lte: endDate } },
         { date_fin: { $gte: startDate } }
@@ -108,8 +111,11 @@ const createReservation = async (req, res) => {
       return res.status(409).json({ message: "Le véhicule est déjà réservé sur cette période." });
     }
 
-    // Vérifier aussi les VIP
-    const allVIPs = await ReservationVIP.find({ vehicule_reserve: vehicule }).select('date_debut_reservation duree_reservation');
+    // Vérifier aussi les VIP non annulées
+    const allVIPs = await ReservationVIP.find({
+      vehicule_reserve: vehicule,
+      statut: { $ne: 'Annulée' }
+    }).select('date_debut_reservation duree_reservation statut');
     const isOverlappingVIP = allVIPs.some(vip => {
       if (!vip.date_debut_reservation) return false;
       const vipStart = new Date(vip.date_debut_reservation);
@@ -127,7 +133,8 @@ const createReservation = async (req, res) => {
       vehicule,
       client,
       date_debut: startDate,
-      date_fin: endDate
+      date_fin: endDate,
+      statut: 'Confirmée'
     });
 
     await reservation.save();
@@ -138,7 +145,41 @@ const createReservation = async (req, res) => {
   }
 };
 
+const getReservations = async (req, res) => {
+  try {
+    const reservations = await Reservation.find()
+      .populate('vehicule')
+      .sort({ date_creation: -1 });
+
+    res.status(200).json({ success: true, count: reservations.length, data: reservations });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur lors du chargement des réservations.', error: error.message });
+  }
+};
+
+const cancelReservation = async (req, res) => {
+  try {
+    const reservation = await Reservation.findById(req.params.id);
+    if (!reservation) {
+      return res.status(404).json({ success: false, message: 'Réservation introuvable.' });
+    }
+
+    if (reservation.statut === 'Annulée') {
+      return res.status(400).json({ success: false, message: 'Cette réservation est déjà annulée.', data: reservation });
+    }
+
+    reservation.statut = 'Annulée';
+    await reservation.save();
+
+    return res.status(200).json({ success: true, message: 'Réservation annulée avec succès.', data: reservation });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Erreur lors de l’annulation de la réservation.', error: error.message });
+  }
+};
+
 module.exports = {
   checkAvailability,
-  createReservation
+  createReservation,
+  getReservations,
+  cancelReservation
 };

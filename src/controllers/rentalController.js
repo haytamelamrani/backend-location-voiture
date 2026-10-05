@@ -69,3 +69,39 @@ exports.getReservationsVIP = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * @desc    Annuler une réservation VIP sans la supprimer
+ * @route   PATCH /api/v1/rentals/vip/:id/cancel
+ */
+exports.cancelReservationVIP = async (req, res, next) => {
+  try {
+    const reservation = await ReservationVIP.findById(req.params.id);
+
+    if (!reservation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Réservation VIP introuvable.'
+      });
+    }
+
+    if (reservation.statut === 'Annulée') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cette réservation est déjà annulée.',
+        data: reservation
+      });
+    }
+
+    reservation.statut = 'Annulée';
+    await reservation.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Réservation annulée avec succès.',
+      data: reservation
+    });
+  } catch (error) {
+    next(error);
+  }
+};

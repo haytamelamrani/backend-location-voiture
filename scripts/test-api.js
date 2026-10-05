@@ -18,8 +18,10 @@ async function runTests() {
     const baseUrl = `http://localhost:${PORT}/api/v1/cars`;
 
     const testImmat = 'TT888ZZ';
+    const testImmatCancelled = 'TT999ZZ';
     // Nettoyer d'éventuels anciens tests
     await Vehicule.deleteOne({ immatriculation: testImmat });
+    await Vehicule.deleteOne({ immatriculation: testImmatCancelled });
 
     console.log('\n--- TEST 1: Corps de requête vide (attendu 400) ---');
     let res = await fetch(baseUrl, {
@@ -89,9 +91,107 @@ async function runTests() {
     data = await res.json();
     console.log('Status:', res.status, '| Nombre de voitures trouvées:', data.count);
 
+    console.log('\n--- TEST 6: Annulation d\'une réservation VIP (attendu 200 + disponibilité rétablie) ---');
+    const carCancel = await fetch(`${baseUrl.replace('/cars', '')}/cars`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        marque: 'BMW',
+        modele: 'X5',
+        type_vehicule: 'voiture',
+        immatriculation: testImmatCancelled,
+        type_carburant: 'diesel',
+        date_mise_en_service: '2022-11-12',
+        kilometrage: 65000,
+        consommation: 7.1
+      })
+    });
+    const createdCar = await carCancel.json();
+    const vehicleId = createdCar.data?._id || createdCar.data?.id;
+
+    const vipReservationResponse = await fetch('http://localhost:5555/api/v1/rentals/vip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nom_client: 'Dupont',
+        prenom_client: 'Alice',
+        vehicule_reserve: vehicleId,
+        duree_reservation: 3,
+        date_action: '2026-10-01',
+        date_debut_reservation: '2026-10-10'
+      })
+    });
+    const vipReservation = await vipReservationResponse.json();
+    console.log('Status création VIP:', vipReservationResponse.status, '| Success:', vipReservation.success, '| Message:', vipReservation.message);
+
+    const cancelResponse = await fetch(`http://localhost:5555/api/v1/rentals/vip/${vipReservation.data?._id || vipReservation.data?.id}/cancel`, {
+      method: 'PATCH'
+    });
+    const cancelData = await cancelResponse.json();
+    console.log('Status annulation VIP:', cancelResponse.status, '| Statut:', cancelData.data?.statut, '| Message:', cancelData.message);
+
+    const availabilityResponse = await fetch('http://localhost:5555/api/v1/reservations/availability?start_date=2026-10-10&end_date=2026-10-12');
+    const availabilityData = await availabilityResponse.json();
+    console.log('Status disponibilité:', availabilityResponse.status, '| Véhicules disponibles:', availabilityData.count, '| Contient le BMW:', availabilityData.data?.some((car) => car._id === vehicleId));
+
+    console.log('\n--- TEST 7: Annulation d\'une réservation confirmée (attendu 200 + historique conservé + disponibilité rétablie) ---');
+    const standardCar = await fetch(`${baseUrl.replace('/cars', '')}/cars`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        marque: 'Audi',
+        modele: 'A4',
+        type_vehicule: 'voiture',
+        immatriculation: 'AA555BB',
+        type_carburant: 'diesel',
+        date_mise_en_service: '2024-01-12',
+        kilometrage: 32000,
+        consommation: 5.5
+      })
+    });
+    const standardCarData = await standardCar.json();
+    const standardCarId = standardCarData.data?._id || standardCarData.data?.id;
+
+    const standardReservation = await fetch('http://localhost:5555/api/v1/reservations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vehicule: standardCarId,
+        client: {
+          nom: 'Martin',
+          prenom: 'Claire',
+          email: 'claire.martin@test.com',
+          telephone: '0600000000',
+          adresse: '12 rue des Fêtes'
+        },
+        date_debut: '2026-12-01',
+        date_fin: '2026-12-05'
+      })
+    });
+    const standardReservationData = await standardReservation.json();
+    console.log('Status création réservation standard:', standardReservation.status, '| Ref:', standardReservationData.data?.reference, '| Statut:', standardReservationData.data?.statut);
+
+    const standardCancel = await fetch(`http://localhost:5555/api/v1/reservations/${standardReservationData.data?._id}/cancel`, {
+      method: 'PATCH'
+    });
+    const standardCancelData = await standardCancel.json();
+    console.log('Status annulation standard:', standardCancel.status, '| Statut:', standardCancelData.data?.statut, '| Message:', standardCancelData.message);
+
+    const standardList = await fetch('http://localhost:5555/api/v1/reservations');
+    const standardListData = await standardList.json();
+    const standardReservationId = standardReservationData.data?._id || standardReservationData.data?.id;
+    const cancelledReservation = standardListData.data?.find((item) => (item._id || item.id) === standardReservationId);
+    console.log('Historique conservé:', !!cancelledReservation, '| Réservation annulée dans historique:', cancelledReservation?.statut);
+
+    const standardAvailability = await fetch('http://localhost:5555/api/v1/reservations/availability?start_date=2026-12-01&end_date=2026-12-05');
+    const standardAvailabilityData = await standardAvailability.json();
+    console.log('Disponibilité après annulation standard:', standardAvailability.status, '| Contient le véhicule:', standardAvailabilityData.data?.some((car) => car._id === standardCarId));
+
     // Nettoyage après test
     await Vehicule.deleteOne({ immatriculation: testImmat });
-    console.log('\nNettoyage effectué (véhicule de test supprimé). Tous les tests sont validés avec succès !');
+    await Vehicule.deleteOne({ immatriculation: testImmatCancelled });
+    await Vehicule.deleteOne({ immatriculation: 'AA555BB' });
+    console.log('\nNettoyage effectué (véhicules de test supprimés). Tous les tests sont validés avec succès !');
 
   } catch (error) {
     console.error('Erreur lors du test :', error);

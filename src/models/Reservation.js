@@ -8,7 +8,7 @@ const reservationSchema = new mongoose.Schema({
   },
   vehicule: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Car',
+    ref: 'Vehicule',
     required: true
   },
   client: {
@@ -29,6 +29,11 @@ const reservationSchema = new mongoose.Schema({
   date_creation: {
     type: Date,
     default: Date.now
+  },
+  statut: {
+    type: String,
+    enum: ['Confirmée', 'Annulée'],
+    default: 'Confirmée'
   }
 });
 

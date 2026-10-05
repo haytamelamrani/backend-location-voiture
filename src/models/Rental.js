@@ -22,6 +22,11 @@ const reservationVIPSchema = new mongoose.Schema({
         required: [true, 'La durée de réservation est obligatoire.'],
         min: [1, 'La durée de réservation doit être d\'au moins 1 jour.']
     },
+    statut: {
+        type: String,
+        enum: ['Confirmée', 'Annulée'],
+        default: 'Confirmée'
+    },
     date_action: {
         type: Date,
         default: Date.now
