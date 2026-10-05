@@ -64,11 +64,4 @@ const vehiculeSchema = new mongoose.Schema({
     versionKey: false
 });
 
-const Vehicule = mongoose.models.Vehicule || mongoose.model('Vehicule', vehiculeSchema);
-
-// Alias de modèle 'Car' pour assurer la compatibilité avec ref: 'Car'
-if (!mongoose.models.Car) {
-    mongoose.model('Car', vehiculeSchema);
-}
-
-module.exports = Vehicule;
+module.exports = mongoose.model('Vehicule', vehiculeSchema);

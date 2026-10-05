@@ -8,7 +8,7 @@ const reservationSchema = new mongoose.Schema({
   },
   vehicule: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Car',
+    ref: 'Vehicule',
     required: true
   },
   client: {
