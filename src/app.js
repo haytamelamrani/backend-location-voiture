@@ -38,7 +38,7 @@ app.get('/api/v1/health', (req, res) => {
 // Routes de l'API
 // app.use('/api/v1/auth', require('./routes/auth.routes'));
 app.use('/api/v1/cars', require('./routes/cars.routes'));
-// app.use('/api/v1/rentals', require('./routes/rentals.routes'));
+app.use('/api/v1/rentals', require('./routes/rentals.routes'));
 
 // Gestion des routes non trouvées (404)
 app.use((req, res) => {
