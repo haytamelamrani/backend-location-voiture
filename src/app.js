@@ -7,7 +7,27 @@ const app = express();
 
 // Middlewares globaux
 app.use(helmet());
-app.use(cors());
+
+const clientUrl = process.env.CLIENT_URL;
+
+if (!clientUrl) {
+  throw new Error('La variable d\'environnement CLIENT_URL est obligatoire dans le fichier .env.');
+}
+
+// Découpage au cas où plusieurs origines sont listées (séparées par une virgule dans .env)
+const allowedOrigins = clientUrl.split(',').map((url) => url.trim());
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Autoriser les requêtes sans origine (Postman, curl, tests internes) ou si l'origine correspond à .env
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Origine CORS non autorisée : ${origin}. CLIENT_URL attendu : ${clientUrl}`));
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Point d'entrée de statut de l'API
